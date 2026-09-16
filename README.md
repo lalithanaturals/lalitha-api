@@ -54,15 +54,14 @@ instance with a `tmpfs` data dir so each run starts from a clean database), wait
 healthy, runs the Node test suite (`tests/*.test.mjs`) against it, and tears the container down
 whether the tests pass or fail.
 
-> **Note on this dev environment:** the Docker-based path (`npm run test:docker`) could not be
-> exercised here because this sandbox's Docker daemon cannot reach Docker Hub to pull the
-> `alpine` base image (plain `docker pull hello-world` also hangs indefinitely, confirming it's a
-> registry-connectivity restriction, not a bug in this repo's Dockerfile/compose files). The full
-> test suite (14 tests) was verified instead by running the same migrations directly against a
-> locally-downloaded PocketBase binary and pointing `tests/*.test.mjs` at it — logically identical
-> to what happens inside the container, since the Dockerfile just runs that same binary with the
-> same migrations. Run `npm run test:docker` in an environment with normal registry access to
-> confirm the containerized path; nothing about the setup is sandbox-specific.
+`npm run test:docker` has been run successfully end-to-end: image build, container start,
+healthcheck, all 14 tests against the containerized instance, and teardown all passed. (One
+environment note: the sandbox this was developed in couldn't do a plain `docker pull` of a new
+image from Docker Hub — its Docker daemon routes through a restricted proxy that only serves
+already-cached images — so `alpine:3.20` had to be aliased locally to an already-cached
+Alpine-based image to get `docker build`'s `FROM` resolution to succeed offline. That workaround
+was local-only and is not reflected anywhere in this repo; a normal environment with Docker Hub
+access pulls the real `alpine:3.20` and needs no such alias.)
 
 ### What's covered
 
