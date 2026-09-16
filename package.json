@@ -1,0 +1,11 @@
+{
+  "name": "lalitha-backend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "PocketBase backend (collections, migrations, tests) for the Lalitha Naturals app suite",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:docker": "bash scripts/test.sh"
+  }
+}

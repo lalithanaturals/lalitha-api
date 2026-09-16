@@ -1,0 +1,16 @@
+services:
+  pocketbase-test:
+    build: .
+    image: lalitha-backend:test
+    ports:
+      - "8091:8090"
+    tmpfs:
+      - /pb/pb_data
+    environment:
+      - PB_SUPERUSER_EMAIL=admin@lalithanaturals.local
+      - PB_SUPERUSER_PASSWORD=TestAdmin123!
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8090/api/health"]
+      interval: 3s
+      timeout: 3s
+      retries: 20

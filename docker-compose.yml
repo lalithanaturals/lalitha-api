@@ -1,0 +1,20 @@
+services:
+  pocketbase:
+    build: .
+    image: lalitha-backend:local
+    ports:
+      - "8090:8090"
+    volumes:
+      - pb_data:/pb/pb_data
+    environment:
+      - PB_SUPERUSER_EMAIL=${PB_SUPERUSER_EMAIL:-admin@lalithanaturals.local}
+      - PB_SUPERUSER_PASSWORD=${PB_SUPERUSER_PASSWORD:-ChangeMe123!}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8090/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pb_data:
