@@ -110,3 +110,15 @@ see the git history for `pb_migrations/` if you need to regenerate or extend the
 To add a new collection: either create it through the Admin UI (`/_/`) locally and run
 `./pocketbase migrate collections` to snapshot it into a new `pb_migrations/<timestamp>_*.js`
 file, or hand-write a migration following the existing files' shape.
+
+### Seed data
+
+`1700000020_seed_reference_data.js` is a *data* migration (not a schema one): it inserts the
+real branch list and the full Stock-transfer inventory catalog (7 categories, 141 items) that
+the original static HTML app carried as a hardcoded `defaultInventoryData` object / Google Sheets
+fallback, so a fresh install looks like the real business instead of an empty database. Six
+duplicate item codes present in that original hardcoded catalog were dropped, since `code` is a
+unique index on `inventory_items` — see the migration file's header comment for which ones.
+`products`, `settings`, and the other catalogs are intentionally left empty: the old app entered
+those by hand through its UI rather than hardcoding them, so there's nothing authoritative to
+seed.
