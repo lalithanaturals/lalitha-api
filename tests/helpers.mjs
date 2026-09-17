@@ -41,7 +41,7 @@ export function unique(prefix) {
 }
 
 /** Creates a branch + staff + login-capable user in one go, scoped to that branch. */
-export async function createBranchStaffUser(superToken, { role = "staff", branchName } = {}) {
+export async function createBranchStaffUser(superToken, { role = "staff", branchName, pin } = {}) {
   const branch = (await api("POST", "/api/collections/branches/records", {
     token: superToken,
     body: { name: branchName || unique("Branch"), address: "Test Address", is_active: true },
@@ -49,7 +49,7 @@ export async function createBranchStaffUser(superToken, { role = "staff", branch
 
   const staff = (await api("POST", "/api/collections/staff/records", {
     token: superToken,
-    body: { name: unique("Staff"), branch: branch.id, is_active: true },
+    body: { name: unique("Staff"), branch: branch.id, is_active: true, ...(pin ? { pin } : {}) },
   })).json;
 
   const email = `${unique("user")}@test.local`;

@@ -18,7 +18,7 @@ collections (`exchange_records` and the server-only `counters` collection behind
 
 ```
 pb_migrations/   PocketBase JS migrations that define every collection & access rule
-pb_hooks/        server-side JS hooks (currently: exchange_records' sequential display_id)
+pb_hooks/        server-side JS hooks (exchange_records' sequential display_id, staff PIN login)
 scripts/test.sh  builds + runs an ephemeral Docker container and runs the test suite against it
 tests/           Node.js API test suite (node:test) exercising the REST API end-to-end
 Dockerfile       downloads the pinned PocketBase binary and bakes in the migrations
@@ -110,6 +110,28 @@ see the git history for `pb_migrations/` if you need to regenerate or extend the
 To add a new collection: either create it through the Admin UI (`/_/`) locally and run
 `./pocketbase migrate collections` to snapshot it into a new `pb_migrations/<timestamp>_*.js`
 file, or hand-write a migration following the existing files' shape.
+
+### Staff PIN login
+
+Every collection except `staff` requires an authenticated user (`@request.auth.id != ""`), so the
+Flutter app needs to log in before it can show anything. Since these are shared shop-floor
+devices, login is a 4-digit PIN rather than an email/password form: `staff.listRule`/`viewRule`
+are public so the app can render a "pick your name" screen, `staff.pin` is a `hidden` field (never
+serialized in any API response, including that public list), and `POST /api/staff-login`
+(`pb_hooks/main.pb.js`) is the only code that ever reads a PIN — it looks up the staff record,
+checks the PIN server-side via `$app`, finds the linked `users` record (`users.staff` relation),
+and returns a normal PocketBase auth token via `$apis.recordAuthResponse`, so the client treats it
+exactly like `authWithPassword`'s response.
+
+`1700000022_seed_staff_logins.js` seeds two starting accounts so this works out of the box:
+
+| Name  | Role  | PIN  | Branch    |
+|-------|-------|------|-----------|
+| Admin | admin | 1234 | (none — admin bypasses branch scoping) |
+| Staff | staff | 5678 | Gajuwaka  |
+
+Add real staff through the admin UI (`/_/` → `staff` + `users` collections) before a production
+rollout, and change/remove these two placeholder PINs.
 
 ### Seed data
 
