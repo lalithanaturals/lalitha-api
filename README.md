@@ -7,15 +7,16 @@ for its collections.
 
 Currently modeled: the shared collections (`branches`, `staff`, `users`, `settings`), the
 **Print module's** collections (`products`, `price_tags`, `estimates`, `estimate_items`,
-`coupons`, `custom_prints` — fully migrated), and the **Stock-transfer module's** collections
+`coupons`, `custom_prints` — fully migrated), the **Stock-transfer module's** collections
 (`inventory_categories`, `inventory_items`, `inventory_stock`, `transit_sheets`,
-`transit_sheet_items`), per the master plan.
+`transit_sheet_items`), and the **scrap-calc module's** collections (`exchange_records` and the
+server-only `counters` collection behind its sequential `display_id`), per the master plan.
 
 ## Layout
 
 ```
 pb_migrations/   PocketBase JS migrations that define every collection & access rule
-pb_hooks/        reserved for future server-side hooks (empty for now)
+pb_hooks/        server-side JS hooks (currently: exchange_records' sequential display_id)
 scripts/test.sh  builds + runs an ephemeral Docker container and runs the test suite against it
 tests/           Node.js API test suite (node:test) exercising the REST API end-to-end
 Dockerfile       downloads the pinned PocketBase binary and bakes in the migrations
@@ -85,6 +86,10 @@ access pulls the real `alpine:3.20` and needs no such alias.)
   for staff at either the sending or receiving branch (denied — as a 404, matching the
   branch-scoped `price_tags` behavior above — for staff outside both), cascade-delete of items
   when the sheet is deleted
+- `exchange_records`: the `pb_hooks/main.pb.js` hook assigns sequential `display_id`s (`EX-1`,
+  `EX-2`, ...) on create; estimate → order conversion via a status `PATCH` on the same record
+  (keeping its `display_id`); search by `customer_name`/`customer_phone`/`display_id` filters;
+  branch-scoped updates denied for staff outside the record's branch
 
 ## Migrations
 
