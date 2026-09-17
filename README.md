@@ -5,9 +5,11 @@ Denomination). See [PROJECT_PLAN.md](../Print/PROJECT_PLAN.md) in the `Print` re
 suite-wide architecture and data-store rationale, and each module repo's own `PROJECT_PLAN.md`
 for its collections.
 
-Currently modeled: the shared collections (`branches`, `staff`, `users`, `settings`) plus the
+Currently modeled: the shared collections (`branches`, `staff`, `users`, `settings`), the
 **Print module's** collections (`products`, `price_tags`, `estimates`, `estimate_items`,
-`coupons`, `custom_prints`) — the first module being migrated, per the master plan.
+`coupons`, `custom_prints` — fully migrated), and the **Stock-transfer module's** collections
+(`inventory_categories`, `inventory_items`, `inventory_stock`, `transit_sheets`,
+`transit_sheet_items`), per the master plan.
 
 ## Layout
 
@@ -55,7 +57,7 @@ healthy, runs the Node test suite (`tests/*.test.mjs`) against it, and tears the
 whether the tests pass or fail.
 
 `npm run test:docker` has been run successfully end-to-end: image build, container start,
-healthcheck, all 14 tests against the containerized instance, and teardown all passed. (One
+healthcheck, all tests against the containerized instance, and teardown all passed. (One
 environment note: the sandbox this was developed in couldn't do a plain `docker pull` of a new
 image from Docker Hub — its Docker daemon routes through a restricted proxy that only serves
 already-cached images — so `alpine:3.20` had to be aliased locally to an already-cached
@@ -76,6 +78,13 @@ access pulls the real `alpine:3.20` and needs no such alias.)
 - `coupons`: issue → redeem lifecycle
 - `custom_prints`: arbitrary JSON `content` storage, `print_type` enum validation
 - `settings`: unique `key` constraint, admin-only writes with staff read access
+- `inventory_categories`/`inventory_items`: admin-only writes, staff read access
+- `inventory_stock`: staff can create/update counts for their own branch; unique `(item, branch)`
+  pair enforced
+- `transit_sheets` + `transit_sheet_items`: creation with line items, status transitions allowed
+  for staff at either the sending or receiving branch (denied — as a 404, matching the
+  branch-scoped `price_tags` behavior above — for staff outside both), cascade-delete of items
+  when the sheet is deleted
 
 ## Migrations
 
