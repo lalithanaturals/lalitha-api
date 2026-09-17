@@ -128,7 +128,9 @@ exactly like `authWithPassword`'s response.
 | Name  | Role  | PIN  | Branch    |
 |-------|-------|------|-----------|
 | Admin | admin | 1234 | (none — admin bypasses branch scoping) |
-| Staff | staff | 5678 | Gajuwaka  |
+| Staff | staff | 1234 | Gajuwaka  |
+
+Both use PIN **1234** on purpose, for easy testing — change them before a production rollout.
 
 ### `created`/`updated` fields
 

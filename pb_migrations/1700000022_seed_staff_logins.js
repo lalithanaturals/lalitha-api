@@ -18,7 +18,7 @@ migrate((app) => {
 
   const roster = [
     { name: "Admin", role: "admin", pin: "1234", branchId: "", email: "staff-admin@lalithanaturals.local" },
-    { name: "Staff", role: "staff", pin: "5678", branchId: gajuwaka.id, email: "staff-gajuwaka@lalithanaturals.local" },
+    { name: "Staff", role: "staff", pin: "1234", branchId: gajuwaka.id, email: "staff-gajuwaka@lalithanaturals.local" },
   ];
 
   for (const entry of roster) {
