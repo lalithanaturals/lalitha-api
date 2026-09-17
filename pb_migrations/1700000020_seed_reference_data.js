@@ -3,7 +3,7 @@
 // captured from the original static HTML apps, so a fresh install/demo has the
 // same look as the old GitHub Pages sites instead of empty lists. Six duplicate
 // item codes present in the original hardcoded catalog were dropped (see
-// lalitha-backend/README.md) since `code` is unique per inventory_items row.
+// lalitha-api/README.md) since `code` is unique per inventory_items row.
 migrate((app) => {
   const branchesCollection = app.findCollectionByNameOrId("branches");
   const branches = [

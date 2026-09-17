@@ -3,7 +3,7 @@
 // pb_hooks/main.pb.js's /api/staff-login route) works out of the box:
 // one admin and one Gajuwaka staff account. Real staff should be added
 // through the admin UI (`/_/`) before a production rollout — see
-// lalitha-backend/README.md.
+// lalitha-api/README.md.
 //
 // Each `staff` row gets a matching `users` auth row so /api/staff-login can
 // mint a token for it. The `users.password` value is never used by anyone

@@ -1,7 +1,9 @@
+name: lalitha-api
+
 services:
   pocketbase:
     build: .
-    image: lalitha-backend:local
+    image: lalitha-api:local
     ports:
       - "8090:8090"
     volumes:

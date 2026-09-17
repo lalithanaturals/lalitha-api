@@ -1,5 +1,5 @@
 {
-  "name": "lalitha-backend",
+  "name": "lalitha-api",
   "private": true,
   "version": "1.0.0",
   "description": "PocketBase backend (collections, migrations, tests) for the Lalitha Naturals app suite",

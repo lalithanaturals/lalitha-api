@@ -1,7 +1,9 @@
+name: lalitha-api-test
+
 services:
   pocketbase-test:
     build: .
-    image: lalitha-backend:test
+    image: lalitha-api:test
     ports:
       - "8091:8090"
     tmpfs:

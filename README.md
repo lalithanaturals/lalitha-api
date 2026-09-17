@@ -1,4 +1,4 @@
-# lalitha-backend
+# lalitha-api
 
 PocketBase backend for the Lalitha Naturals app suite (Print, Stock-transfer, scrap-calc,
 Denomination). See [PROJECT_PLAN.md](../Print/PROJECT_PLAN.md) in the `Print` repo for the full
