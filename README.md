@@ -5,12 +5,14 @@ Denomination). See [PROJECT_PLAN.md](../Print/PROJECT_PLAN.md) in the `Print` re
 suite-wide architecture and data-store rationale, and each module repo's own `PROJECT_PLAN.md`
 for its collections.
 
-Currently modeled: the shared collections (`branches`, `staff`, `users`, `settings`), the
-**Print module's** collections (`products`, `price_tags`, `estimates`, `estimate_items`,
-`coupons`, `custom_prints` — fully migrated), the **Stock-transfer module's** collections
-(`inventory_categories`, `inventory_items`, `inventory_stock`, `transit_sheets`,
-`transit_sheet_items`), and the **scrap-calc module's** collections (`exchange_records` and the
-server-only `counters` collection behind its sequential `display_id`), per the master plan.
+Currently modeled — **every collection every module needs is now in place**: the shared
+collections (`branches`, `staff`, `users`, `settings`), the **Print module's** collections
+(`products`, `price_tags`, `estimates`, `estimate_items`, `coupons`, `custom_prints`), the
+**Stock-transfer module's** collections (`inventory_categories`, `inventory_items`,
+`inventory_stock`, `transit_sheets`, `transit_sheet_items`), the **scrap-calc module's**
+collections (`exchange_records` and the server-only `counters` collection behind its sequential
+`display_id`), and the **Denomination module's** collections (`audit_registers`,
+`audit_line_items`), per the master plan.
 
 ## Layout
 
@@ -90,6 +92,12 @@ access pulls the real `alpine:3.20` and needs no such alias.)
   `EX-2`, ...) on create; estimate → order conversion via a status `PATCH` on the same record
   (keeping its `display_id`); search by `customer_name`/`customer_phone`/`display_id` filters;
   branch-scoped updates denied for staff outside the record's branch
+- `audit_registers`: draft → committed lifecycle (`committed_by` stamped on commit); unique
+  `(branch, date)` pair enforced (one register per branch per day); the opening-balance-chaining
+  query (yesterday's closing balance for the branch) via `filter`; branch-scoped updates denied
+  for staff outside the register's branch
+- `audit_line_items`: creation and cascade-delete of line items when the parent register is
+  deleted
 
 ## Migrations
 
