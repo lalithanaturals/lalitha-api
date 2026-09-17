@@ -123,14 +123,17 @@ checks the PIN server-side via `$app`, finds the linked `users` record (`users.s
 and returns a normal PocketBase auth token via `$apis.recordAuthResponse`, so the client treats it
 exactly like `authWithPassword`'s response.
 
-`1700000022_seed_staff_logins.js` seeds two starting accounts so this works out of the box:
+`1700000022_seed_staff_logins.js` and `1700000024_relax_products_create_and_seed_staff.js`
+together seed one starting account per branch, all on PIN **1234** for easy testing — change them
+before a production rollout:
 
 | Name  | Role  | PIN  | Branch    |
 |-------|-------|------|-----------|
 | Admin | admin | 1234 | (none — admin bypasses branch scoping) |
 | Staff | staff | 1234 | Gajuwaka  |
-
-Both use PIN **1234** on purpose, for easy testing — change them before a production rollout.
+| Staff (Kurmannapalem) | staff | 1234 | Kurmannapalem |
+| Staff (Gajuwaka Packing) | staff | 1234 | Gajuwaka Packing |
+| Staff (Kurmannapalem Packing) | staff | 1234 | Kurmannapalem Packing |
 
 ### `created`/`updated` fields
 
@@ -160,4 +163,7 @@ duplicate item codes present in that original hardcoded catalog were dropped, si
 unique index on `inventory_items` — see the migration file's header comment for which ones.
 `products`, `settings`, and the other catalogs are intentionally left empty: the old app entered
 those by hand through its UI rather than hardcoding them, so there's nothing authoritative to
-seed.
+seed. `products.createRule` is any authenticated user (not admin-only, unlike most other
+collections) for the same reason — the old app's Price Tag screen had a plain "+ Add Brand Name"
+button with no role check, and the Flutter rebuild's inline product quick-create needs to match
+that (see `1700000024_relax_products_create_and_seed_staff.js`).

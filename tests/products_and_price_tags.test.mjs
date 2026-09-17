@@ -11,7 +11,7 @@ async function makeProduct(token) {
   return res.json;
 }
 
-test("staff cannot create products, admin can", async () => {
+test("any authenticated staff can create products (matches the old app's free-text + Add Brand Name)", async () => {
   const superToken = await authAsSuperuser();
   const admin = await createBranchStaffUser(superToken, { role: "admin" });
   const staff = await createBranchStaffUser(superToken, { role: "staff" });
@@ -20,10 +20,15 @@ test("staff cannot create products, admin can", async () => {
     token: staff.token,
     body: { brand_name: unique("Brand"), default_price: 50 },
   });
-  assert.equal(asStaff.status, 400);
+  assert.equal(asStaff.status, 200, JSON.stringify(asStaff.json));
 
   const asAdmin = await makeProduct(admin.token);
   assert.ok(asAdmin.id);
+
+  const anon = await api("POST", "/api/collections/products/records", {
+    body: { brand_name: unique("Brand"), default_price: 50 },
+  });
+  assert.equal(anon.status, 400, "anonymous (no auth) still cannot create a product");
 });
 
 test("staff can create a price tag for their own branch", async () => {
