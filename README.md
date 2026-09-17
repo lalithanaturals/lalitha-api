@@ -130,6 +130,21 @@ exactly like `authWithPassword`'s response.
 | Admin | admin | 1234 | (none — admin bypasses branch scoping) |
 | Staff | staff | 5678 | Gajuwaka  |
 
+### `created`/`updated` fields
+
+Only collections created through the Admin UI get `created`/`updated` autodate fields
+automatically — hand-written/JS-migration collections don't, unless the migration explicitly adds
+them. `price_tags`, `coupons`, `custom_prints`, `transit_sheets`, and `exchange_records` were
+missing them even though their Flutter repositories all sort list queries by `-created`, so every
+one of those list calls 400'd against a real backend (`1700000023_add_created_updated_fields.js`
+fixes it). This went unnoticed for a while because the Flutter-side repository tests mock the
+HTTP client — they never validate that a `sort` param is actually a real field — and because
+several of the affected list calls (`TransitSheetRepository.listForBranch` in particular) had no
+UI caller until the Transit History screen. `tests/sortable_collections.test.mjs` now guards
+against this recurring: **any new base collection whose repository sorts by `-created` needs
+those two fields added in its own migration** (see the `users` auth collection or
+`1700000023_add_created_updated_fields.js` for the field shape).
+
 Add real staff through the admin UI (`/_/` → `staff` + `users` collections) before a production
 rollout, and change/remove these two placeholder PINs.
 
