@@ -21,9 +21,10 @@ pb_migrations/   PocketBase JS migrations that define every collection & access 
 pb_hooks/        server-side JS hooks (exchange_records' sequential display_id, staff PIN login)
 scripts/test.sh  builds + runs an ephemeral Docker container and runs the test suite against it
 tests/           Node.js API test suite (node:test) exercising the REST API end-to-end
-Dockerfile       downloads the pinned PocketBase binary and bakes in the migrations
+Dockerfile       downloads the pinned PocketBase binary and bakes in the migrations (local/CI Docker only — see "Deploying to the Raspberry Pi")
 docker-compose.yml       persistent dev instance (named volume, port 8090)
 docker-compose.test.yml  ephemeral test instance (tmpfs, port 8091)
+deploy/          Raspberry Pi deployment: systemd unit, start/stop scripts, deploy/backup/restore/logs — see below
 ```
 
 ## Running locally (no Docker)
@@ -46,6 +47,47 @@ docker compose up -d --build
 
 Superuser credentials come from `PB_SUPERUSER_EMAIL` / `PB_SUPERUSER_PASSWORD` env vars (see
 `docker-compose.yml`); change them for anything beyond local dev.
+
+## Deploying to the Raspberry Pi
+
+**Docker is only used for local dev/CI testing above — the Pi deployment does not use
+Docker.** Every other app on the family Pi (EllieEats, NexaLink, Lahari) runs natively under
+systemd, not in a container (Docker itself was deliberately removed from that Pi — see
+`rpi-setup/docs/14-app-deployment.md`), so `lalitha-api` follows the same pattern: the
+`pocketbase` binary + `pb_migrations/` + `pb_hooks/` deployed straight onto the Pi, run by
+`lalitha-api.service`.
+
+Reachable at **https://lipi.online**, proxied by Apache (TLS termination) to PocketBase
+listening on loopback `127.0.0.1:8084`. The account/directories/vhost side of this is owned
+by the sibling `rpi-setup` repo (`scripts/configure-lalitha-api.sh`); this repo's `deploy/`
+directory owns the actual binary/migrations/hooks/systemd-unit/secrets:
+
+| Script | Purpose |
+|---|---|
+| `deploy/deploy-commands.sh` | Reference commands for first-time setup (copy/paste section by section — not a single runnable script, since the Pi's `sudo` needs an interactive password) |
+| `deploy/redeploy.sh` | Routine update: ships `pb_migrations/` + `pb_hooks/`, restarts the service. Run this after every migration/hook change. |
+| `deploy/logs.sh` | Service status + tail (`-f` to follow, `-n` for line count) |
+| `deploy/backup.sh` | Downloads a PocketBase-native backup (SQLite + file storage) to `deploy/backups/` on this machine, via PocketBase's own `/api/backups` API — not a hand-rolled `sqlite3`/`tar` script |
+| `deploy/restore.sh` | Uploads a local backup zip and restores it (destructive — prompts for confirmation) |
+| `deploy/lalitha-api.service` | The systemd unit (`User=lalitha`, hardened with `ProtectSystem=strict` + `ReadWritePaths=/var/lib/lalitha-api/pb_data`) |
+| `deploy/lalitha-api-start.sh` / `-stop.sh` | `ExecStart`/`ExecStop` — sources `lalitha-api.env`, runs the superuser upsert (same idempotent behavior as `docker-entrypoint.sh`), execs `pocketbase serve` |
+| `deploy/lalitha-api.env` | Local-only, gitignored — real superuser email/password + port/data-dir overrides. Never committed, not even as a template (matches `ellieeats-api`'s convention) — `deploy-commands.sh`'s comments document the required vars |
+
+First-time setup (once `rpi-setup`'s `configure-lalitha-api.sh` + DNS + a cert are in place):
+work through `deploy/deploy-commands.sh` section by section. After that, routine updates are
+just:
+
+```bash
+bash deploy/redeploy.sh
+```
+
+Data lives at `/var/lib/lalitha-api/pb_data` on the Pi — separate from `/opt/lalitha-api`
+(the code), so `redeploy.sh` replacing `pb_migrations/`/`pb_hooks/` wholesale never touches
+it. Back it up regularly:
+
+```bash
+PB_SUPERUSER_EMAIL=admin@lalithanaturals.local PB_SUPERUSER_PASSWORD=... bash deploy/backup.sh
+```
 
 ## Testing
 

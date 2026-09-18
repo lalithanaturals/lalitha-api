@@ -2,3 +2,11 @@ pb_data/
 *.log
 node_modules/
 .DS_Store
+
+# Pi deploy secrets/artifacts — see deploy/deploy-commands.sh. Matches
+# ellieeats-api's convention: the real lalitha-api.env (with a real
+# PB_SUPERUSER_PASSWORD) lives only on the Pi at
+# /opt/lalitha-api/lalitha-api.env, chmod 600 — never committed, not even
+# as a template (deploy-commands.sh documents the required vars inline).
+deploy/*.env
+deploy/backups/

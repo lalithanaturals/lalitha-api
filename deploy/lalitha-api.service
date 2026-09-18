@@ -1,0 +1,30 @@
+[Unit]
+Description=Lalitha Naturals PocketBase API
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=lalitha
+Group=lalitha
+WorkingDirectory=/opt/lalitha-api
+ExecStart=/opt/lalitha-api/scripts/lalitha-api-start.sh
+ExecStop=/opt/lalitha-api/scripts/lalitha-api-stop.sh
+UMask=0007
+RestartSec=10
+Restart=always
+KillMode=process
+StandardOutput=file:/var/log/lalitha-api.log
+StandardError=file:/var/log/lalitha-api-error.log
+
+# Hardening (docs/12 §3's target for new units — see rpi-setup's
+# lahari-counter.service.tmpl for the precedent). PocketBase only ever
+# needs to write inside pb_data; everything else on disk stays read-only
+# to this service.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/lalitha-api/pb_data
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
