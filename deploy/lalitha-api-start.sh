@@ -35,4 +35,12 @@ if [[ -n "${PB_SUPERUSER_EMAIL:-}" && -n "${PB_SUPERUSER_PASSWORD:-}" ]]; then
 fi
 
 cd "$APP_DIR"
-exec "$BIN" serve --http="$PB_HTTP_ADDR" --dir "$PB_DATA_DIR"
+# --migrationsDir/--hooksDir passed explicitly rather than relying on
+# PocketBase's implicit CWD-relative lookup: under systemd (unlike an
+# interactive `cd $APP_DIR && ./pocketbase serve` test run) the implicit
+# lookup found zero pending migrations even with pb_migrations/ present and
+# readable, silently leaving every custom collection (staff, branches, ...)
+# missing — see the lipi.online incident where /api/collections/staff/...
+# 404'd with "Missing collection context" until this was made explicit.
+exec "$BIN" serve --http="$PB_HTTP_ADDR" --dir "$PB_DATA_DIR" \
+    --migrationsDir "$APP_DIR/pb_migrations" --hooksDir "$APP_DIR/pb_hooks"
