@@ -17,6 +17,27 @@
 # 14-app-deployment.md. This script re-creates the dirs/log files
 # defensively too (belt and suspenders), same as ellieeats-api's
 # deploy-commands.sh.
+#
+# configure-lalitha-api.sh and this script are two SEPARATE steps run at
+# different times. Running only the former (dirs/vhost, no app) leaves
+# Apache proxying to a port nothing listens on — that shows up as a plain
+# Apache 503 on https://lipi.online with nothing suggesting the app was
+# ever installed. If lipi.online 503s, check `sudo systemctl status
+# lalitha-api` on the Pi before assuming a running service crashed.
+#
+# lalitha-api.env gotcha: this script's install step never overwrites an
+# existing lalitha-api.env on the Pi (see the `[ -f ... ] || mv ...` guard
+# below), so if that file was hand-created with only PB_SUPERUSER_PASSWORD
+# set, lalitha-api-start.sh's superuser upsert silently skips (both vars
+# are required together — no error, no account created). PocketBase also
+# rejects passwords under 8 characters, and that failure lands in
+# /var/log/lalitha-api-error.log, not `journalctl`. If `/_/` login says
+# "Invalid login credentials", check that log before assuming the
+# credentials are simply wrong — the account may not exist yet:
+#   sudo tail -20 /var/log/lalitha-api-error.log
+# Fix directly rather than waiting on the next restart:
+#   sudo -u lalitha /opt/lalitha-api/pocketbase superuser upsert \
+#     admin@lalithanaturals.local <password-8chars+> --dir /var/lib/lalitha-api/pb_data
 set -euo pipefail
 
 log() { echo "[$(date '+%H:%M:%S')] $*"; }

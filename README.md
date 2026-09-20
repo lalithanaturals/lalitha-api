@@ -81,6 +81,51 @@ just:
 bash deploy/redeploy.sh
 ```
 
+### First-time setup gotchas
+
+`configure-lalitha-api.sh` and `deploy-commands.sh` are two separate steps run at different
+times (the former sets up the account/dirs/vhost, the latter ships the actual app) — running
+only the first leaves Apache proxying to a port nothing is listening on, which surfaces as a
+generic Apache 503 on `https://lipi.online` with no indication the app itself was ever at
+fault. If that happens, check `sudo systemctl status lalitha-api` on the Pi before assuming the
+service crashed — it may never have been installed yet.
+
+`deploy-commands.sh`'s install step deliberately never overwrites an existing
+`/opt/lalitha-api/lalitha-api.env` (see its `[ -f ... ] || mv ...` guard, so re-running
+first-time setup can't clobber real secrets with the blank template). That means if
+`lalitha-api.env` was hand-created on the Pi (e.g. by `configure-lalitha-api.sh`) with only
+`PB_SUPERUSER_PASSWORD` set and no `PB_SUPERUSER_EMAIL`, the start script's
+`[[ -n "$PB_SUPERUSER_EMAIL" && -n "$PB_SUPERUSER_PASSWORD" ]]` guard silently skips the
+superuser upsert on every restart — no error, just no superuser account ever created. **Both
+vars must be set together** for the upsert to run at all.
+
+PocketBase also enforces an 8-character minimum on the superuser password. A too-short
+password makes the upsert fail (not silently — it errors, but only into
+`/var/log/lalitha-api-error.log`, not `journalctl`, since `lalitha-api.service` redirects
+stdout/stderr to those files):
+
+```
+2026/09/20 13:49:29 failed to upsert superuser account: password: Must be at least 8 character(s).
+```
+
+After changing `lalitha-api.env` and restarting, always confirm the upsert actually succeeded —
+`Invalid login credentials` at `/_/` gives no hint of *why* the account doesn't exist:
+
+```bash
+sudo tail -20 /var/log/lalitha-api-error.log   # look for "failed to upsert superuser"
+```
+
+If it did fail, create/fix the superuser directly rather than relying on the next restart:
+
+```bash
+sudo -u lalitha /opt/lalitha-api/pocketbase superuser upsert admin@lalithanaturals.local <password-8chars+> --dir /var/lib/lalitha-api/pb_data
+```
+
+Also note: `/opt/lalitha-api` and its contents are owned by `lalitha:lalitha` with `750`/`700`
+perms, so an SSH session as the Pi's regular deploy user (not `lalitha`) can't `ls`/`cat` into
+it directly — prefix reads/writes with `sudo` (or `sudo -u lalitha` to run the binary), same as
+`deploy-commands.sh` already does for the install steps.
+
 Data lives at `/var/lib/lalitha-api/pb_data` on the Pi — separate from `/opt/lalitha-api`
 (the code), so `redeploy.sh` replacing `pb_migrations/`/`pb_hooks/` wholesale never touches
 it. Back it up regularly:
